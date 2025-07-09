@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Offres d'emploi | JobLink</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.light-mode {
+            background-color: #f4f6f9;
+            color: #212529;
+        }
+
+        body.dark-mode {
+            background-color: #121212;
+            color: #f1f1f1;
+        }
+
+        .navbar-brand span {
+            color: #0d6efd;
+        }
+
+        .profile-img {
+            height: 36px;
+            width: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ffffff;
+        }
+
+        h2 {
+            font-weight: 700;
+            color: #0d6efd;
+            animation: fadeInDown 1s ease;
+        }
+
+        .btn-postuler {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 50px;
+            font-weight: 500;
+            padding: 5px 20px;
+        }
+
+        .btn-postuler:hover {
+            background-color: #0b5ed7;
+        }
+
+        #toggle-theme {
+            cursor: pointer;
+            font-size: 1.3rem;
+            border: none;
+            background: transparent;
+            color: white;
+        }
+
+        #toggle-theme:hover {
+            opacity: 0.7;
+        }
+
+        @keyframes fadeInDown {
+            0% { opacity: 0; transform: translateY(-30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert {
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode .alert {
+            background-color: #333;
+            color: #f1f1f1;
+            border-color: #555;
+        }
+
+        .form-control, .form-control:focus {
+            transition: background 0.3s, color 0.3s;
+        }
+
+        body.dark-mode .form-control {
+            background-color: #1c1c1c;
+            color: #f1f1f1;
+            border: 1px solid #555;
+        }
+
+        body.dark-mode .btn-outline-primary {
+            border-color: #0d6efd;
+            color: #0d6efd;
+        }
+
+        body.dark-mode .btn-outline-primary:hover {
+            background-color: #0d6efd;
+            color: #fff;
+        }
+
+        /* ✅ Scroll horizontal 3D */
+        .scroll-container {
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .offer-card {
+            width: 300px;
+            scroll-snap-align: start;
+            perspective: 1000px;
+        }
+
+        .offer-card .card {
+            transform-style: preserve-3d;
+            transition: transform 0.5s, box-shadow 0.5s;
+            border-radius: 16px;
+            background: white;
+            color: #212529;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            border: none;
+        }
+
+        .offer-card .card:hover {
+            transform: rotateY(3deg) scale(1.03);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        body.dark-mode .offer-card .card {
+            background: #1e1e1e;
+            color: #f1f1f1;
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+<body class="light-mode">
+
+<!-- ✅ NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow-sm">
+    <a class="navbar-brand fw-bold" href="/">Job<span>Link</span></a>
+
+    <div class="ms-auto d-flex align-items-center gap-3">
+        <button id="toggle-theme" title="Changer de thème">🌙</button>
+
+        <img th:src="@{'/uploads/' + ${candidat.photo}}" alt="Photo" class="profile-img">
+        <span class="text-white fw-semibold" th:text="${candidat.nom}">Nom</span>
+
+        <a th:href="@{/candidat/dashboard}" class="btn btn-outline-light btn-sm">🔙 Retour</a>
+
+        <form th:action="@{/logout}" method="post" class="m-0">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Déconnexion</button>
+        </form>
+    </div>
+</nav>
+
+<!-- ✅ CONTENU -->
+<div class="container mt-5">
+    <h2 class="text-center mb-4">🧾 Offres d'emploi disponibles</h2>
+
+    <!-- ✅ Message s'il n'y a aucune offre -->
+    <div class="row" th:if="${#lists.isEmpty(offres)}">
+        <div class="col">
+            <div class="alert alert-warning text-center">🚫 Aucune offre n'est actuellement disponible.</div>
+        </div>
+    </div>
+
+    <!-- ✅ Barre de recherche -->
+    <form class="row justify-content-center mb-4" method="get" th:action="@{/candidat/offres}">
+        <div class="col-md-6">
+            <input type="text" name="localisation" class="form-control form-control-sm"
+                   th:value="${localisation}" placeholder="🔍 Rechercher par localisation...">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-outline-primary btn-sm">Rechercher</button>
+        </div>
+    </form>
+
+    <!-- ✅ Liste des offres : Horizontal Scroll avec effet 3D -->
+    <div class="container-fluid px-4">
+        <div class="scroll-container d-flex gap-4 overflow-auto pb-3 pt-2">
+            <div class="offer-card flex-shrink-0" th:each="offre : ${offres}">
+                <div class="card h-100">
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title text-primary" th:text="${offre.titre}">Titre</h5>
+                        <p class="card-text mb-1"><strong>📍</strong> <span th:text="${offre.localisation}">Ville</span></p>
+                        <p class="card-text mb-1"><strong>📅</strong> <span th:text="${offre.datePublication}">Date</span></p>
+                        <p class="card-text mt-2" th:text="${#strings.abbreviate(offre.description, 120)}">Description</p>
+                        <div class="mt-auto text-center">
+                            <a th:href="@{'/candidat/postuler/' + ${offre.id}}" class="btn btn-postuler mt-3">📤 Postuler</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ✅ Script de thème -->
+<script>
+    const toggle = document.getElementById('toggle-theme');
+    const body = document.body;
+
+    function applyTheme(theme) {
+        body.className = theme;
+        toggle.textContent = theme === 'dark-mode' ? '☀️' : '🌙';
+        localStorage.setItem('theme', theme);
+    }
+
+    toggle.addEventListener('click', () => {
+        const newTheme = body.classList.contains('light-mode') ? 'dark-mode' : 'light-mode';
+        applyTheme(newTheme);
+    });
+
+    const savedTheme = localStorage.getItem('theme') || 'light-mode';
+    applyTheme(savedTheme);
+</script>
+
+</body>
+</html>

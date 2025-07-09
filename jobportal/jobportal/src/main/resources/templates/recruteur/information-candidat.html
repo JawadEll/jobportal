@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Infos Candidat</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <h3 class="text-center mb-4">👤 Informations sur la Candidature</h3>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5 class="card-title">Offre : <span th:text="${candidature.offre.titre}">Titre</span></h5>
+            <p class="card-text">Message du candidat : <span th:text="${candidature.message}">Message</span></p>
+            <p class="card-text">Statut :
+                <span th:switch="${candidature.statut.name()}">
+                    <span th:case="'EN_ATTENTE'" class="badge bg-warning text-dark">⏳ En attente</span>
+                    <span th:case="'ACCEPTEE'" class="badge bg-success">✅ Acceptée</span>
+                    <span th:case="'REFUSEE'" class="badge bg-danger">❌ Refusée</span>
+                    <span th:case="*">❓ Inconnu</span>
+                </span>
+            </p>
+
+            <p th:if="${candidature.dateEntretien != null}">
+                📅 Date d'entretien envoyée : <strong th:text="${candidature.dateEntretien}"></strong>
+            </p>
+
+            <div th:if="${candidature.dateEntretien == null}">
+                <form th:action="@{'/recruteur/envoyer-date/' + ${candidature.id}}" method="post" class="d-flex align-items-end gap-2">
+                    <div>
+                        <label class="form-label">Choisir une date d'entretien :</label>
+                        <input type="date" name="dateEntretien" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">📨 Envoyer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <a th:href="@{/recruteur/candidatures}" class="btn btn-secondary">← Retour à la liste</a>
+</div>
+
+</body>
+</html>

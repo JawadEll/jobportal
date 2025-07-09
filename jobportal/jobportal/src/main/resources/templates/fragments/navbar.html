@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form th:action="@{/logout}" method="post" th:if="${#authorization.expression('isAuthenticated()')}">
+    <button class="btn btn-danger mt-3">Se déconnecter</button>
+</form>
+
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>📄 Candidatures reçues</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .dark-mode {
+            background-color: #121212 !important;
+            color: #e0e0e0 !important;
+        }
+
+        .dark-mode .table {
+            color: #fff;
+        }
+
+        .dark-mode .table th {
+            background-color: #1f1f1f !important;
+            color: #f0f0f0;
+        }
+
+        .badge {
+            font-size: 0.85rem;
+            border-radius: 1rem;
+        }
+
+        .table td, .table th {
+            vertical-align: middle;
+        }
+
+        .mode-toggle {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body id="body">
+<!-- ✅ NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    <a class="navbar-brand fw-bold text-white" href="/">JobPortal</a>
+
+    <div class="ms-auto d-flex gap-3 align-items-center">
+
+        <!-- 🔴 Icône Messages avec badge -->
+        <a th:href="@{/recruteur/candidatures}" class="position-relative text-white">
+            <i class="bi bi-chat-dots fs-4"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  th:if="${nbMessagesNonLus > 0}"
+                  th:text="${nbMessagesNonLus}">0</span>
+        </a>
+
+        <button class="btn btn-outline-light btn-sm mode-toggle" onclick="toggleMode()">🌓 Mode</button>
+        <a href="/recruteur/dashboard" class="btn btn-outline-light btn-sm">⬅ Retour</a>
+
+        <form th:action="@{/logout}" method="post" class="m-0">
+            <button class="btn btn-danger btn-sm">Déconnexion</button>
+        </form>
+    </div>
+</nav>
+
+<!-- ✅ CONTENU -->
+<div class="container mt-4">
+    <h2 class="text-center mb-4">📬 Candidatures reçues</h2>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover text-center align-middle">
+            <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>CV</th>
+                <th>Offre</th>
+                <th>Message</th>
+                <th>Statut</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="candidature, iter : ${candidatures}">
+
+                <td th:text="${candidature.candidat.nom}">Nom</td>
+                <td th:text="${candidature.candidat.email}">Email</td>
+                <td>
+                    <a th:href="@{'/uploads/' + ${candidature.candidat.cv}}" class="btn btn-outline-primary btn-sm" target="_blank">📄 CV</a>
+                </td>
+                <td th:text="${candidature.offre.titre}">Offre</td>
+                <td th:text="${candidature.message}">Message</td>
+                <td>
+                    <span th:if="${candidature.statut.name() == 'EN_ATTENTE'}"
+                          class="badge text-dark" style="background-color:#ffecb3;">⏳ En attente</span>
+                    <span th:if="${candidature.statut.name() == 'ACCEPTEE'}"
+                          class="badge text-white" style="background-color:#4caf50;">✅ Acceptée</span>
+                    <span th:if="${candidature.statut.name() == 'REFUSEE'}"
+                          class="badge text-white" style="background-color:#e53935;">❌ Refusée</span>
+                </td>
+                <td>
+                    <div class="d-flex flex-column gap-1">
+                        <a th:href="@{'/recruteur/info-candidat/' + ${candidature.id}}" class="btn btn-outline-primary btn-sm">📄 Détails</a>
+                        <a th:if="${candidature.statut.name() == 'EN_ATTENTE'}"
+                           th:href="@{'/recruteur/candidature/accepter/' + ${candidature.id}}"
+                           class="btn btn-success btn-sm">✅ Accepter</a>
+                        <a th:if="${candidature.statut.name() == 'EN_ATTENTE'}"
+                           th:href="@{'/recruteur/candidature/refuser/' + ${candidature.id}}"
+                           class="btn btn-danger btn-sm">❌ Refuser</a>
+                    </div>
+                    <a th:href="@{'/recruteur/chat/' + ${candidature.id}}" class="btn btn-warning btn-sm">💬 Chat</a>
+
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <!-- ✅ MODALE CHAT -->
+    <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="chatModalLabel">💬 Conversation avec le candidat</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="chatBox">
+                        <p class="text-muted">Chargement des messages...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <form id="chatForm" class="w-100 d-flex gap-2">
+                        <input type="text" class="form-control" name="contenu" placeholder="Écrire un message..." required />
+                        <button type="submit" class="btn btn-primary">Envoyer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+<!-- ✅ JS Toggle -->
+<script>
+    function toggleMode() {
+        document.getElementById('body').classList.toggle('dark-mode');
+    }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const chatModal = document.getElementById("chatModal");
+        let candidatureId;
+
+        chatModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            candidatureId = button.getAttribute("data-candidature-id");
+
+            fetch("/recruteur/api/messages/" + candidatureId)
+                .then(res => res.json())
+                .then(data => {
+                    const chatBox = document.getElementById("chatBox");
+                    chatBox.innerHTML = "";
+                    data.forEach(msg => {
+                        const msgEl = document.createElement("div");
+                        msgEl.classList.add("mb-2", "p-2", "rounded");
+                        msgEl.style.backgroundColor = msg.role === "RECRUTEUR" ? "#d1e7dd" : "#f8d7da";
+                        msgEl.innerHTML = `<small>${msg.date}</small><br><strong>${msg.contenu}</strong>`;
+                        chatBox.appendChild(msgEl);
+                    });
+                });
+        });
+
+        document.getElementById("chatForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch("/recruteur/api/messages/" + candidatureId, {
+                method: "POST",
+                body: new URLSearchParams(formData)
+            })
+                .then(() => {
+                    this.reset();
+                    chatModal.dispatchEvent(new Event("show.bs.modal")); // Recharge les messages
+                });
+        });
+    });
+</script>
+
+
+</body>
+</html>

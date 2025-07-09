@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Mes Candidatures</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f1f3f6;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .profile-img {
+            height: 40px;
+            width: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark px-4">
+    <a class="navbar-brand fw-bold text-white" href="/">Job<span>Portal</span></a>
+    <div class="d-flex align-items-center gap-3 ms-auto">
+        <img th:src="@{'/uploads/' + ${candidat.photo}}" alt="Photo" class="profile-img">
+        <span class="text-white fw-semibold" th:text="${candidat.nom}">Nom</span>
+        <a th:href="@{/candidat/dashboard}" class="btn btn-outline-light btn-sm">🔙 Retour</a>
+        <form th:action="@{/logout}" method="post" class="m-0">
+            <button type="submit" class="btn btn-outline-danger btn-sm">Déconnexion</button>
+        </form>
+        <a th:href="@{/candidat/messages}" class="btn btn-outline-light position-relative">
+            💬
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                  th:if="${nbMessagesNonLus > 0}" th:text="${nbMessagesNonLus}">1</span>
+        </a>
+
+    </div>
+</nav>
+
+<div class="container mt-5">
+    <h3 class="mb-4 text-center">📋 Mes Candidatures</h3>
+
+    <div th:if="${candidatures.isEmpty()}">
+        <div class="alert alert-info text-center">Aucune candidature pour le moment.</div>
+    </div>
+
+    <div class="table-responsive" th:if="${!candidatures.isEmpty()}">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-dark text-center">
+            <tr>
+                <th>Offre</th>
+                <th>Message</th>
+                <th>Date</th>
+                <th>Statut</th>
+            </tr>
+            </thead>
+            <tbody class="text-center">
+            <tr th:each="cand : ${candidatures}">
+                <td th:text="${cand.offre.titre}">Titre</td>
+                <td th:text="${cand.message}">Message</td>
+                <td th:text="${cand.dateCandidature}">Date</td>
+                <td>
+                    <span th:switch="${cand.statut.name()}">
+                        <span th:case="'EN_ATTENTE'" class="badge bg-warning text-dark">⏳ En attente</span>
+                        <span th:case="'ACCEPTEE'" class="badge bg-success">✅ Acceptée</span>
+                        <span th:case="'REFUSEE'" class="badge bg-danger">❌ Refusée</span>
+                    </span>
+
+                    <div th:if="${cand.statut.name() == 'ACCEPTEE'}" class="mt-2">
+                        <form th:action="@{/candidat/candidature/{id}/demande-date(id=${cand.id})}" method="post">
+                            <button type="submit" class="btn btn-sm btn-outline-primary">📅 Recevoir une date</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const chatModal = document.getElementById("chatModal");
+        const chatBox = document.getElementById("chatBox");
+
+        let candidatureId = null;
+
+        chatModal.addEventListener("show.bs.modal", function (event) {
+            const button = event.relatedTarget;
+            if (!button) {
+                console.error("Aucun bouton déclencheur détecté");
+                return;
+            }
+
+            candidatureId = button.getAttribute("data-candidature-id");
+            console.log("📌 ID de candidature:", candidatureId);
+
+            if (!candidatureId) {
+                console.error("⚠️ Aucune candidatureId trouvée !");
+                return;
+            }
+
+            fetch(`/recruteur/api/messages/${candidatureId}`)
+                .then(res => res.json())
+                .then(data => {
+                    chatBox.innerHTML = "";
+                    data.forEach(msg => {
+                        const msgEl = document.createElement("div");
+                        msgEl.classList.add("message", "mb-2", "p-2", "rounded");
+                        msgEl.style.backgroundColor = msg.role === "RECRUTEUR" ? "#d1e7dd" : "#f8d7da";
+                        msgEl.innerHTML = `<small>${msg.dateEnvoi.replace("T", " ").substring(0, 16)}</small><br><strong>${msg.contenu}</strong>`;
+                        chatBox.appendChild(msgEl);
+                    });
+                });
+        });
+
+        // Fonction pour envoyer message
+        document.getElementById("envoyerBtn").addEventListener("click", function () {
+            const contenu = document.getElementById("messageInput").value.trim();
+            if (!contenu || !candidatureId) return;
+
+            const formData = new FormData();
+            formData.append("contenu", contenu);
+
+            fetch(`/recruteur/api/messages/${candidatureId}`, {
+                method: "POST",
+                body: formData
+            })
+                .then(() => {
+                    document.getElementById("messageInput").value = "";
+                    // Recharge les messages
+                    fetch(`/recruteur/api/messages/${candidatureId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            chatBox.innerHTML = "";
+                            data.forEach(msg => {
+                                const msgEl = document.createElement("div");
+                                msgEl.classList.add("message", "mb-2", "p-2", "rounded");
+                                msgEl.style.backgroundColor = msg.role === "RECRUTEUR" ? "#d1e7dd" : "#f8d7da";
+                                msgEl.innerHTML = `<small>${msg.dateEnvoi.replace("T", " ").substring(0, 16)}</small><br><strong>${msg.contenu}</strong>`;
+                                chatBox.appendChild(msgEl);
+                            });
+                        });
+                });
+        });
+    });
+</script>
+
+</body>
+</html>

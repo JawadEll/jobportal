@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Connexion | JobPortal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(to right, #74ebd5, #ACB6E5);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .login-box {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 1.2rem;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+            transition: transform 0.2s;
+        }
+
+        .login-box:hover {
+            transform: translateY(-3px);
+        }
+
+        .login-box h3 {
+            font-weight: bold;
+            color: #343a40;
+        }
+
+        .btn-primary {
+            border-radius: 50px;
+        }
+
+        .text-muted {
+            font-size: 0.9rem;
+        }
+
+        .link-style {
+            font-size: 0.9rem;
+            text-decoration: none;
+            color: #0d6efd;
+        }
+
+        .link-style:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-box">
+    <h3 class="text-center mb-3">🔐 Connexion</h3>
+    <p class="text-center text-muted mb-4">Connectez-vous à votre espace JobPortal</p>
+
+    <div th:if="${param.logout}" class="alert alert-success text-center">✅ Déconnexion réussie.</div>
+    <div th:if="${param.error}" class="alert alert-danger text-center">❌ Email ou mot de passe invalide.</div>
+    <div th:if="${param.registerSuccess}" class="alert alert-success text-center">✅ Inscription réussie. Connectez-vous.</div>
+
+    <form th:action="@{/login}" method="post">
+        <div class="mb-3">
+            <label for="email" class="form-label">Adresse Email</label>
+            <input type="text" class="form-control" id="email" name="username" required placeholder="ex: user@mail.com">
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Mot de passe</label>
+            <input type="password" class="form-control" id="password" name="password" required placeholder="••••••••">
+        </div>
+        <div class="d-grid">
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+        </div>
+    </form>
+
+    <div class="text-center mt-3">
+        <a href="/register" class="link-style">📝 Créer un compte</a>
+    </div>
+</div>
+
+</body>
+</html>
